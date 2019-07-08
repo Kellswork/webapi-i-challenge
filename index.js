@@ -1,8 +1,12 @@
 // implement your API here
 
 const express = require('express');
+const bodyParser = require('body-parser');
 const db = require('./data/db');
+
 const server = express();
+
+server.use(bodyParser.json());
 
 server.get('/api/users', (req, res) => {
   db.find()
@@ -31,6 +35,40 @@ server.get('/api/users/:id', (req, res) => {
       res
         .status(500)
         .json({ error: 'The users information could not be retrieved.' });
+    });
+});
+
+server.post('/api/users', (req, res) => {
+  db.insert(req.body)
+    .then(user => {
+      if (req.body.name === '' || req.body.bio === '') {
+        res
+          .status(400)
+          .json({ errorMessage: 'Please provide name and bio for the user.' });
+      } else {
+        res.status(201).json(user);
+      }
+    })
+    .catch(() => {
+      res.status(500).json({
+        error: 'There was an error while saving the user to the database'
+      });
+    });
+});
+
+server.delete('/api/users/:id', (req, res) => {
+  db.remove(req.params.id)
+    .then(userDeleted => {
+      if (userDeleted) {
+        res.status(204).end();
+      } else {
+        res
+          .status(404)
+          .json({ message: 'The user with the specified ID does not exist.' });
+      }
+    })
+    .catch(() => {
+      res.status(500).json({ error: 'The user could not be removed' });
     });
 });
 
