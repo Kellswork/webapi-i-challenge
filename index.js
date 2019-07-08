@@ -39,15 +39,15 @@ server.get('/api/users/:id', (req, res) => {
 });
 
 server.post('/api/users', (req, res) => {
+  if (req.body.name === '' || req.body.bio === '') {
+    return res
+      .status(400)
+      .json({ errorMessage: 'Please provide name and bio for the user.' });
+  }
   db.insert(req.body)
-    .then(user => {
-      if (req.body.name === '' || req.body.bio === '') {
-        res
-          .status(400)
-          .json({ errorMessage: 'Please provide name and bio for the user.' });
-      } else {
-        res.status(201).json(user);
-      }
+      .then(user => {
+        
+      res.status(201).json(user);
     })
     .catch(() => {
       res.status(500).json({
@@ -60,11 +60,32 @@ server.delete('/api/users/:id', (req, res) => {
   db.remove(req.params.id)
     .then(userDeleted => {
       if (userDeleted) {
-        res.status(204).end();
+        res.status(204).json(userDeleted);
       } else {
         res
           .status(404)
           .json({ message: 'The user with the specified ID does not exist.' });
+      }
+    })
+    .catch(() => {
+      res.status(500).json({ error: 'The user could not be removed' });
+    });
+});
+
+server.put('/api/users/:id', (req, res) => {
+  if (req.body.name === '' || req.body.bio === '') {
+    return res
+      .status(400)
+      .json({ errorMessage: 'Please provide name and bio for the user.' });
+  }
+  db.update(req.params.id, req.body)
+    .then(user => {
+      if (!user) {
+        res
+          .status(404)
+          .json({ message: 'The user with the specified ID does not exist.' });
+      } else {
+        res.status(200).json(user);
       }
     })
     .catch(() => {
